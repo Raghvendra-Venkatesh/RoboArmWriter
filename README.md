@@ -120,7 +120,7 @@ The project folder and `.ino` file have matching names, as required by Arduino I
 
 ### Wi-Fi and passwords
 
-The local `config.h` currently uses **`roboarm123`**, a public, guessable default. Replace it with a unique password of at least 8 characters **before connecting to the arm**. The dashboard does not have a separate login: anyone who can join the hotspot can control the arm.
+Replace the starter hotspot password with a unique password of at least 8 characters **before connecting to the arm**. The dashboard does not have a separate login: anyone who can join the hotspot can control the arm.
 
 `config.h` is excluded by `.gitignore`. Keep real router and hotspot credentials in that private file; commit only `config.example.h`. The example intentionally contains blank router credentials and a placeholder hotspot password.
 
