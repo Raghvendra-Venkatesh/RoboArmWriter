@@ -1,12 +1,72 @@
 # RoboArm Writer
 
-RoboArm Writer is an ESP8266-controlled, six-joint robot arm that draws short text on paper with a marker. Its dashboard is served directly by the ESP8266: connect to the arm's Wi-Fi network, open `http://192.168.4.1/`, calibrate the arm, and send text to draw.
+<div align="center">
 
-The dashboard is embedded in the firmware; it does not need a separate web server, cloud service, or internet connection. Calibration and drawing settings are saved in the ESP8266's LittleFS storage.
+**Turn typed text into pen strokes with a Wi-Fi-controlled robot arm.**
+
+An offline, browser-based handwriting robot built with an **ESP8266 NodeMCU**, a **PCA9685 servo driver**, and a marker.
+
+[![Board: ESP8266](https://img.shields.io/badge/board-ESP8266-323330?logo=espressif&logoColor=white)](https://github.com/esp8266/Arduino)
+[![Dashboard: Offline](https://img.shields.io/badge/dashboard-offline-2f7d5b)](#connect-to-the-dashboard)
+[![Language: Arduino](https://img.shields.io/badge/language-Arduino-00979D?logo=arduino&logoColor=white)](https://www.arduino.cc/)
+[![License: not specified](https://img.shields.io/badge/license-not%20specified-lightgrey)](#license)
+
+</div>
+
+The arm hosts its own Wi-Fi network and serves the dashboard right from the board. No cloud account, external web server, or internet connection is required. Calibrate the servos, set the arm geometry and writing point, preview your message, and draw.
+
+> [!IMPORTANT]
+> **This firmware is for an ESP8266 NodeMCU (ESP-12E), not an ESP32.** It uses ESP8266-specific Wi-Fi and web-server libraries.
+
+> [!CAUTION]
+> The dashboard can move the arm. Keep clear of joints and pinch points, use a separate, adequately rated servo supply, and keep a hand near its power switch during calibration. The dashboard's STOP button is **not** a physical emergency stop.
+
+## Dashboard
+
+<div align="center">
+<img src="docs/images/dashboard-draw.png" alt="RoboArm Writer dashboard with text entry and paper preview" width="49%">
+<img src="docs/images/dashboard-writing-point.png" alt="RoboArm Writer dashboard writing-point calibration and pen controls" width="49%">
+</div>
+
+## Quick start
+
+1. Confirm that your board is an **ESP8266 NodeMCU** and connect the arm using the [wiring guide](#hardware-and-wiring).
+2. Install the [ESP8266 board platform and required Arduino libraries](#arduino-ide-setup-and-upload).
+3. Create a local `config.h` from `config.example.h`, set a private Wi-Fi password, and upload `RoboArm_Writer.ino`.
+4. Connect your phone or computer to the arm's Wi-Fi; if prompted, stay connected without internet.
+5. Open **[http://192.168.4.1/](http://192.168.4.1/)** in your browser.
+6. Calibrate the arm in dashboard tabs **2 → 3 → 4**, preview your text, and press **Draw it**.
+
+**Change the default hotspot password before connecting the arm to a shared network.** See [Wi-Fi and passwords](#wi-fi-and-passwords).
+
+<details>
+<summary><strong>Contents</strong></summary>
+
+- [Features](#features)
+- [Before you start](#before-you-start)
+- [Hardware and wiring](#hardware-and-wiring)
+- [Arduino IDE setup and upload](#arduino-ide-setup-and-upload)
+- [Wi-Fi and passwords](#wi-fi-and-passwords)
+- [Connect to the dashboard](#connect-to-the-dashboard)
+- [First calibration](#first-calibration)
+- [Write text](#write-text)
+- [Troubleshooting](#troubleshooting)
+- [Project files](#project-files)
+- [License](#license)
+
+</details>
+
+## Features
+
+- Writes supported text with an onboard single-stroke font.
+- Previews strokes and marks points outside the robot's reachable area.
+- Includes step-by-step servo calibration, arm-size setup, paper-touch calibration, jogging, and a STOP control.
+- Compensates for paper tilt using saved touch points.
+- Saves arm calibration and settings in ESP8266 LittleFS.
+- Serves the complete dashboard locally; internet access is not needed.
 
 ## Before you start
 
-- **This project targets an ESP8266 NodeMCU (ESP-12E), not an ESP32.** The firmware includes ESP8266-specific libraries.
 - Assemble the arm and mount a marker before calibration. Keep the pen above the paper while checking motion.
 - Use an adequately rated, regulated **5–6 V servo supply** (the firmware comments recommend 5 A or more). Servo current depends on the servos and load.
 - Do not power the servos from the NodeMCU's 3.3 V pin or USB. Connect the servo supply ground, PCA9685 ground, and NodeMCU ground together.
@@ -43,7 +103,7 @@ Power the servos through the PCA9685's servo-power input from the separate 5–6
 2. Install these libraries from Library Manager:
    - **Adafruit PWM Servo Driver Library**
    - **ArduinoJson** version 7
-3. In this project folder, make your private settings file from the example only if you do not already have one:
+3. In this project folder, create your local settings file from the example if you do not already have one:
 
    ```powershell
    if (-not (Test-Path config.h)) { Copy-Item config.example.h config.h }
@@ -58,11 +118,13 @@ Power the servos through the PCA9685's servo-power input from the separate 5–6
 
 The project folder and `.ino` file have matching names, as required by Arduino IDE. No separate LittleFS data upload is needed for a clean first setup.
 
-### Keeping credentials out of GitHub
+### Wi-Fi and passwords
 
-`config.h` is in `.gitignore`. Keep actual router credentials and your chosen access-point password in that local file only. Commit `config.example.h`, which contains blank router credentials and a placeholder access-point password. Do not replace the example's placeholder with your real password.
+The local `config.h` currently uses **`roboarm123`**, a public, guessable default. Replace it with a unique password of at least 8 characters **before connecting to the arm**. The dashboard does not have a separate login: anyone who can join the hotspot can control the arm.
 
-The dashboard has no separate login. Anyone who can join the arm's hotspot can issue motion commands. If you enable home-Wi-Fi mode, devices on that network may also be able to reach the dashboard; use a trusted network.
+`config.h` is excluded by `.gitignore`. Keep real router and hotspot credentials in that private file; commit only `config.example.h`. The example intentionally contains blank router credentials and a placeholder hotspot password.
+
+If you enable home-Wi-Fi mode, devices on that network may also be able to reach the dashboard. Use a trusted network and avoid reusing an important password.
 
 ## Connect to the dashboard
 
@@ -123,36 +185,30 @@ The app saves calibration and settings in LittleFS. Avoid erasing or formatting 
 
 Supported characters are `A-Z`, `0-9`, spaces, `-`, `.`, `!`, and `?`. Lowercase letters are drawn as uppercase. Long text wraps by words when possible; the writing-area dimensions and reach limit what fits. Use **Park** to return to the saved park pose.
 
-## Configuration and project files
+## Troubleshooting
+
+| Symptom | What to check |
+| --- | --- |
+| `192.168.4.1` does not open | Make sure your phone/computer is connected to the arm's hotspot and choose to stay connected without internet. Verify `WIFI_USE_HOME` is `0`, or read the assigned IP in Serial Monitor at 115200 baud. |
+| The hotspot does not appear | Check USB/board power and open Serial Monitor at 115200 baud. Confirm the local `AP_SSID` and password settings, then restart the board. |
+| The board will not compile | Verify **NodeMCU 1.0 (ESP-12E Module)** is selected, the ESP8266 board platform is installed, and both required libraries are available. |
+| A servo moves the wrong way or buzzes | Stop the motion, check wiring and calibration references, and adjust the servo limits. Never let a servo push against a mechanical stop. |
+| A preview shows unreachable points | Recheck measured arm lengths, servo references and limits, writing-point calibration, and paper area. Start with a smaller writing area. |
+| The marker skips or presses too hard | Recalibrate the writing and bottom points, use a small jog step, and check that the paper is flat and the marker is held securely. |
+| Settings were lost after flashing | Calibration is held in LittleFS. Avoid erasing or formatting flash/filesystem storage when uploading new firmware. |
+
+## Project files
 
 - `RoboArm_Writer.ino` — ESP8266 Wi-Fi, HTTP API, setup, and main loop.
 - `config.example.h` — safe template for local Wi-Fi and hardware configuration.
-- `config.h` — your local settings; intentionally ignored by Git.
 - `settings.h` — calibration, geometry, and LittleFS persistence.
 - `kinematics.h` — inverse and forward kinematics.
 - `motion.h` — servo output and motion queue.
 - `paths.h` — text paths and drawing jobs.
 - `font.h` — single-line drawing font.
 - `web_page.h` — embedded dashboard.
+- `docs/images/` — dashboard screenshots.
 
-## Upload this project to GitHub
+## License
 
-1. Create a new GitHub repository. Do not add a separate README or `.gitignore` there if you already have these files locally.
-2. If this folder is not already a Git repository, initialize it. Then, from PowerShell in this folder, stage and review the project:
-
-   ```powershell
-   git init -b main
-   git add .
-   git status
-   ```
-
-3. Check the status before committing. `config.h` must **not** appear in the staged files. If it does, stop and remove it from the index before committing.
-4. Commit and connect the GitHub remote:
-
-   ```powershell
-   git commit -m "Prepare RoboArm Writer project"
-   git remote add origin https://github.com/YOUR-USERNAME/YOUR-REPOSITORY.git
-   git push -u origin main
-   ```
-
-If you already initialized Git or created a remote, do not repeat the corresponding setup command. Never add your real `config.h` or credentials to a commit.
+No license has been specified for this repository. Unless a license is added, others should not assume they have permission to redistribute or modify the project.
