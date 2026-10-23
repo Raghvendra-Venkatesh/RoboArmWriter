@@ -1,0 +1,19 @@
+# Local Wi-Fi and access-point credentials
+config.h
+
+# Arduino / PlatformIO build output
+build/
+out/
+.pio/
+*.elf
+*.hex
+*.bin
+*.map
+
+# Local editor and operating-system files
+.vscode/
+.DS_Store
+Thumbs.db
+*.log
+*.bak
+*.swp
